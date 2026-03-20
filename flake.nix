@@ -143,20 +143,17 @@
                 type = "remap";
                 inputs = [ "mqtt" ];
                 source = ''
-                  parsed = parse_json!(.message)
                   topic_raw = string!(.topic)
-                  measurement = replace(topic_raw, "/", "_")
+                  value = to_float!(strip_whitespace(string!(.message)))
 
-                  parts = []
-                  for_each(object!(parsed)) -> |key, value| {
-                    if is_float(value) || is_integer(value) {
-                      parts = push(parts, key + "=" + to_string(value))
-                    }
-                  }
+                  # solar/pv/voltage → measurement=solar_pv, field=voltage
+                  parts = split(topic_raw, "/")
+                  if length(parts) < 3 { abort }
 
-                  if length(parts) == 0 { abort }
+                  field = join!(slice!(parts, -1), "")
+                  measurement = join!(slice!(parts, 0, -1), "_")
 
-                  .message = measurement + ",mqtt_topic=" + topic_raw + " " + join!(parts, ",")
+                  .message = measurement + ",mqtt_topic=" + topic_raw + " " + field + "=" + to_string(value)
                 '';
               };
 
@@ -210,9 +207,16 @@
               datasources.settings.datasources = [
                 {
                   name = "VictoriaMetrics";
+                  uid = "victoriametrics";
                   type = "prometheus";
                   url = "http://127.0.0.1:8428";
                   isDefault = true;
+                }
+              ];
+              dashboards.settings.providers = [
+                {
+                  name = "default";
+                  options.path = ./dashboards;
                 }
               ];
             };

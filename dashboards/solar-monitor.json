@@ -1,0 +1,300 @@
+{
+  "uid": "solar-monitor",
+  "title": "Solar Monitor",
+  "timezone": "browser",
+  "refresh": "10s",
+  "time": { "from": "now-1h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "PV Power",
+      "gridPos": { "x": 0, "y": 0, "w": 5, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "targets": [{ "expr": "solar_pv_power", "refId": "A" }],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watt",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "dark-red", "value": null },
+              { "color": "orange", "value": 5 },
+              { "color": "green", "value": 15 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Load Power",
+      "gridPos": { "x": 5, "y": 0, "w": 5, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "targets": [{ "expr": "solar_load_power", "refId": "A" }],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watt",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 20 },
+              { "color": "red", "value": 30 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Battery Voltage",
+      "gridPos": { "x": 10, "y": 0, "w": 5, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "targets": [{ "expr": "solar_battery_voltage", "refId": "A" }],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "volt",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "orange", "value": 11.5 },
+              { "color": "green", "value": 12.4 },
+              { "color": "blue", "value": 14.0 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Battery Current",
+      "gridPos": { "x": 15, "y": 0, "w": 5, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "targets": [{ "expr": "solar_pv_current - solar_load_current", "refId": "A" }],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "amp",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": -0.01 },
+              { "color": "green", "value": 0.01 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Mode",
+      "gridPos": { "x": 20, "y": 0, "w": 4, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "targets": [{ "expr": "solar_pv_current - solar_load_current", "refId": "A" }],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "range", "options": { "from": 0.01, "to": 1000, "result": { "text": "Charging", "color": "green", "index": 0 } } },
+            { "type": "range", "options": { "from": -1000, "to": -0.01, "result": { "text": "Discharging", "color": "red", "index": 1 } } },
+            { "type": "range", "options": { "from": -0.01, "to": 0.01, "result": { "text": "Balance", "color": "yellow", "index": 2 } } }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "text", "value": null }]
+          }
+        }
+      },
+      "options": { "colorMode": "background" }
+    },
+    {
+      "id": 10,
+      "type": "row",
+      "title": "Solar Panel (PV)",
+      "gridPos": { "x": 0, "y": 4, "w": 24, "h": 1 },
+      "collapsed": false
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "PV Voltage",
+      "gridPos": { "x": 0, "y": 5, "w": 8, "h": 7 },
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "targets": [{ "expr": "solar_pv_voltage", "legendFormat": "Vpv", "refId": "A" }],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "volt",
+          "color": { "mode": "fixed", "fixedColor": "yellow" }
+        }
+      }
+    },
+    {
+      "id": 12,
+      "type": "timeseries",
+      "title": "PV Current",
+      "gridPos": { "x": 8, "y": 5, "w": 8, "h": 7 },
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "targets": [{ "expr": "solar_pv_current", "legendFormat": "Ipv", "refId": "A" }],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "amp",
+          "color": { "mode": "fixed", "fixedColor": "orange" }
+        }
+      }
+    },
+    {
+      "id": 13,
+      "type": "timeseries",
+      "title": "PV Power",
+      "gridPos": { "x": 16, "y": 5, "w": 8, "h": 7 },
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "targets": [{ "expr": "solar_pv_power", "legendFormat": "Ppv", "refId": "A" }],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watt",
+          "color": { "mode": "fixed", "fixedColor": "super-light-yellow" }
+        }
+      }
+    },
+    {
+      "id": 20,
+      "type": "row",
+      "title": "Load",
+      "gridPos": { "x": 0, "y": 12, "w": 24, "h": 1 },
+      "collapsed": false
+    },
+    {
+      "id": 21,
+      "type": "timeseries",
+      "title": "Load Voltage",
+      "gridPos": { "x": 0, "y": 13, "w": 8, "h": 7 },
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "targets": [{ "expr": "solar_load_voltage", "legendFormat": "Vload", "refId": "A" }],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "volt",
+          "color": { "mode": "fixed", "fixedColor": "blue" }
+        }
+      }
+    },
+    {
+      "id": 22,
+      "type": "timeseries",
+      "title": "Load Current",
+      "gridPos": { "x": 8, "y": 13, "w": 8, "h": 7 },
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "targets": [{ "expr": "solar_load_current", "legendFormat": "Iload", "refId": "A" }],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "amp",
+          "color": { "mode": "fixed", "fixedColor": "light-blue" }
+        }
+      }
+    },
+    {
+      "id": 23,
+      "type": "timeseries",
+      "title": "Load Power",
+      "gridPos": { "x": 16, "y": 13, "w": 8, "h": 7 },
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "targets": [{ "expr": "solar_load_power", "legendFormat": "Pload", "refId": "A" }],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watt",
+          "color": { "mode": "fixed", "fixedColor": "purple" }
+        }
+      }
+    },
+    {
+      "id": 30,
+      "type": "row",
+      "title": "Battery & Energy Balance",
+      "gridPos": { "x": 0, "y": 20, "w": 24, "h": 1 },
+      "collapsed": false
+    },
+    {
+      "id": 31,
+      "type": "timeseries",
+      "title": "Battery Voltage",
+      "gridPos": { "x": 0, "y": 21, "w": 8, "h": 7 },
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "targets": [{ "expr": "solar_battery_voltage", "legendFormat": "Vbat", "refId": "A" }],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "volt",
+          "color": { "mode": "fixed", "fixedColor": "green" },
+          "custom": {
+            "thresholdsStyle": { "mode": "dashed" }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "orange", "value": 11.5 },
+              { "color": "green", "value": 12.4 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 32,
+      "type": "timeseries",
+      "title": "Battery Current (Ipv − Iload)",
+      "gridPos": { "x": 8, "y": 21, "w": 8, "h": 7 },
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "targets": [{ "expr": "solar_pv_current - solar_load_current", "legendFormat": "Ibat", "refId": "A" }],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "amp",
+          "color": { "mode": "fixed", "fixedColor": "light-green" },
+          "custom": {
+            "thresholdsStyle": { "mode": "area" },
+            "fillOpacity": 10
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "green", "value": 0 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 33,
+      "type": "timeseries",
+      "title": "Energy Balance (PV − Load)",
+      "gridPos": { "x": 16, "y": 21, "w": 8, "h": 7 },
+      "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+      "targets": [
+        { "expr": "solar_pv_power", "legendFormat": "PV", "refId": "A" },
+        { "expr": "solar_load_power", "legendFormat": "Load", "refId": "B" },
+        { "expr": "solar_pv_power - solar_load_power", "legendFormat": "Balance", "refId": "C" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watt",
+          "custom": { "fillOpacity": 5 }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Balance" },
+            "properties": [
+              { "id": "custom.lineStyle", "value": { "fill": "dash", "dash": [10, 10] } },
+              { "id": "custom.fillOpacity", "value": 15 }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "schemaVersion": 39,
+  "version": 1
+}
