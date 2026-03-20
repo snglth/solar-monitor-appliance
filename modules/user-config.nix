@@ -35,7 +35,9 @@ in
     after = [
       "local-fs.target"
       "systemd-tmpfiles-setup.service"
+      "boot-firmware.mount"
     ];
+    requires = [ "boot-firmware.mount" ];
     before = [
       "iwd.service"
       "sshd.service"
