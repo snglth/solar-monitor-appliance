@@ -75,7 +75,7 @@
       "title": "Battery Current",
       "gridPos": { "x": 15, "y": 0, "w": 5, "h": 4 },
       "datasource": { "type": "prometheus", "uid": "victoriametrics" },
-      "targets": [{ "expr": "solar_pv_current - solar_load_current", "refId": "A" }],
+      "targets": [{ "expr": "solar_pv_current - ignoring(mqtt_topic) solar_load_current", "refId": "A" }],
       "fieldConfig": {
         "defaults": {
           "unit": "amp",
@@ -96,7 +96,7 @@
       "title": "Mode",
       "gridPos": { "x": 20, "y": 0, "w": 4, "h": 4 },
       "datasource": { "type": "prometheus", "uid": "victoriametrics" },
-      "targets": [{ "expr": "solar_pv_current - solar_load_current", "refId": "A" }],
+      "targets": [{ "expr": "solar_pv_current - ignoring(mqtt_topic) solar_load_current", "refId": "A" }],
       "fieldConfig": {
         "defaults": {
           "mappings": [
@@ -248,7 +248,7 @@
       "title": "Battery Current (Ipv − Iload)",
       "gridPos": { "x": 8, "y": 21, "w": 8, "h": 7 },
       "datasource": { "type": "prometheus", "uid": "victoriametrics" },
-      "targets": [{ "expr": "solar_pv_current - solar_load_current", "legendFormat": "Ibat", "refId": "A" }],
+      "targets": [{ "expr": "solar_pv_current - ignoring(mqtt_topic) solar_load_current", "legendFormat": "Ibat", "refId": "A" }],
       "fieldConfig": {
         "defaults": {
           "unit": "amp",
@@ -276,7 +276,7 @@
       "targets": [
         { "expr": "solar_pv_power", "legendFormat": "PV", "refId": "A" },
         { "expr": "solar_load_power", "legendFormat": "Load", "refId": "B" },
-        { "expr": "solar_pv_power - solar_load_power", "legendFormat": "Balance", "refId": "C" }
+        { "expr": "solar_pv_power - ignoring(mqtt_topic) solar_load_power", "legendFormat": "Balance", "refId": "C" }
       ],
       "fieldConfig": {
         "defaults": {
