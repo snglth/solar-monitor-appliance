@@ -63,7 +63,17 @@
           networking.useNetworkd = true;
           systemd.network.networks."20-wired" = {
             matchConfig.Name = "end0";
-            networkConfig.DHCP = "yes";
+            address = [ "10.44.0.1/24" ];
+            networkConfig = {
+              DHCPServer = true;
+              DHCP = "no";
+            };
+            dhcpServerConfig = {
+              PoolOffset = 100;
+              PoolSize = 100;
+              EmitDNS = false;
+              EmitRouter = false;
+            };
           };
 
           networking.wireless.iwd = {
