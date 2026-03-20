@@ -60,14 +60,22 @@
           # ── Networking ─────────────────────────────────────────────
           networking.hostName = "solar-monitor";
 
+          networking.useNetworkd = true;
+          systemd.network.networks."20-wired" = {
+            matchConfig.Name = "end0";
+            networkConfig.DHCP = "yes";
+          };
+
           networking.wireless.iwd = {
             enable = true;
             settings = {
               Settings.AutoConnect = true;
             };
           };
-
-          networking.interfaces.wlan0.useDHCP = true;
+          systemd.network.networks."30-wireless" = {
+            matchConfig.Name = "wlan0";
+            networkConfig.DHCP = "yes";
+          };
 
           networking.firewall = {
             enable = true;
