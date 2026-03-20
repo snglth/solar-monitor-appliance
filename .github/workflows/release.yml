@@ -1,0 +1,41 @@
+name: Release SD image
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
+      - uses: DeterminateSystems/nix-installer-action@main
+        with:
+          extra-conf: |
+            extra-substituters = https://cache.garnix.io
+            extra-trusted-public-keys = cache.garnix.io:CTFPyKSLcx5RMJKfLo5EEPUObbA78b0YQ2DTCJXqr9g=
+            extra-platforms = aarch64-linux
+
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+
+      - name: Build SD image
+        run: nix build .#packages.aarch64-linux.default
+
+      - name: Prepare release asset
+        run: |
+          img=$(find result/sd-image -name '*.img.zst' -print -quit)
+          cp "$img" "solar-monitor-${GITHUB_REF_NAME}.img.zst"
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: solar-monitor-*.img.zst

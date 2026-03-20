@@ -262,5 +262,8 @@
         })
       ];
     };
+
+    packages.aarch64-linux.default =
+      self.nixosConfigurations.solar-monitor.config.system.build.sdImage;
   };
 }
