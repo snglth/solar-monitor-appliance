@@ -166,7 +166,8 @@
             # the others drop out of the image closure without rebuilding.
             package = pkgs.runCommand "victoriametrics-slim" {} ''
               mkdir -p $out/bin
-              install -m 0755 ${pkgs.victoriametrics}/bin/victoria-metrics $out/bin/
+              cp ${pkgs.victoriametrics}/bin/victoria-metrics $out/bin/
+              chmod 0755 $out/bin/victoria-metrics
             '';
           };
 
