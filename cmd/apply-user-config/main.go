@@ -195,7 +195,7 @@ func main() {
 	}
 
 	log.Println("Configuring MQTT password")
-	if err := configureMQTT("/var/lib/mosquitto/monitor-password", "/var/lib/vector/mqtt.env", mqttPass); err != nil {
+	if err := configureMQTT("/var/lib/mosquitto/monitor-password", "/run/credentials/mqtt.env", mqttPass); err != nil {
 		log.Fatalf("MQTT configuration failed: %v", err)
 	}
 

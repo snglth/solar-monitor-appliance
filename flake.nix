@@ -214,7 +214,7 @@
           systemd.services.vector = {
             after = [ "mosquitto.service" "victoriametrics.service" ];
             wants = [ "mosquitto.service" "victoriametrics.service" ];
-            serviceConfig.EnvironmentFile = "/var/lib/vector/mqtt.env";
+            serviceConfig.EnvironmentFile = "/run/credentials/mqtt.env";
           };
 
           # ── Grafana ────────────────────────────────────────────────
