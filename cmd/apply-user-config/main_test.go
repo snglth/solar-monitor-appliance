@@ -15,7 +15,6 @@ func TestLoadConfig_Full(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "config.json")
 	data := `{
-		"hostname": "myhost",
 		"timezone": "America/Chicago",
 		"wifi": {"ssid": "MyNet", "password": "secret"},
 		"ssh_authorized_keys": ["ssh-ed25519 AAAA test@host"],
@@ -26,9 +25,6 @@ func TestLoadConfig_Full(t *testing.T) {
 	cfg, err := loadConfig(path)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
-	}
-	if cfg.Hostname != "myhost" {
-		t.Errorf("hostname = %q, want %q", cfg.Hostname, "myhost")
 	}
 	if cfg.Timezone != "America/Chicago" {
 		t.Errorf("timezone = %q, want %q", cfg.Timezone, "America/Chicago")
@@ -56,9 +52,6 @@ func TestLoadConfig_Minimal(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if cfg.Hostname != "" {
-		t.Errorf("hostname = %q, want empty", cfg.Hostname)
-	}
 	if cfg.WiFi.SSID != "" {
 		t.Errorf("wifi.ssid = %q, want empty", cfg.WiFi.SSID)
 	}
@@ -76,7 +69,7 @@ func TestLoadConfig_EmptyJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if cfg.Hostname != "" || cfg.Timezone != "" || cfg.WiFi.SSID != "" || cfg.MQTT.Password != "" {
+	if cfg.Timezone != "" || cfg.WiFi.SSID != "" || cfg.MQTT.Password != "" {
 		t.Errorf("expected all zero values, got %+v", cfg)
 	}
 }
@@ -354,39 +347,7 @@ func TestConfigureMQTT_CreatesParentDirs(t *testing.T) {
 	}
 }
 
-// ── setHostname / setTimezone tests ─────────────────────────────────
-
-func TestSetHostname(t *testing.T) {
-	if runtime.GOOS != "linux" && runtime.GOOS != "darwin" {
-		t.Skip("skipping on unsupported OS")
-	}
-
-	dir := t.TempDir()
-	outFile := filepath.Join(dir, "args")
-
-	// Create a mock script that records its arguments
-	mockBin := filepath.Join(dir, "mock-hostnamectl")
-	script := "#!/bin/sh\necho \"$@\" > " + outFile + "\n"
-	os.WriteFile(mockBin, []byte(script), 0755)
-
-	err := setHostname(mockBin, "myhost")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-
-	data, _ := os.ReadFile(outFile)
-	got := strings.TrimSpace(string(data))
-	if got != "set-hostname myhost" {
-		t.Errorf("args = %q, want %q", got, "set-hostname myhost")
-	}
-}
-
-func TestSetHostname_Empty(t *testing.T) {
-	err := setHostname("/nonexistent", "")
-	if err != nil {
-		t.Errorf("expected nil for empty hostname, got %v", err)
-	}
-}
+// ── setTimezone tests ───────────────────────────────────────────────
 
 func TestSetTimezone(t *testing.T) {
 	if runtime.GOOS != "linux" && runtime.GOOS != "darwin" {
@@ -423,7 +384,6 @@ func TestSetTimezone_Empty(t *testing.T) {
 
 func TestConfigRoundTrip(t *testing.T) {
 	cfg := Config{
-		Hostname: "test",
 		Timezone: "UTC",
 	}
 	cfg.WiFi.SSID = "Net"
@@ -445,7 +405,7 @@ func TestConfigRoundTrip(t *testing.T) {
 		t.Fatalf("load: %v", err)
 	}
 
-	if loaded.Hostname != cfg.Hostname || loaded.WiFi.SSID != cfg.WiFi.SSID || loaded.MQTT.Password != cfg.MQTT.Password {
+	if loaded.WiFi.SSID != cfg.WiFi.SSID || loaded.MQTT.Password != cfg.MQTT.Password {
 		t.Errorf("round-trip mismatch: got %+v", loaded)
 	}
 }

@@ -14,7 +14,6 @@ import (
 )
 
 type Config struct {
-	Hostname string `json:"hostname"`
 	Timezone string `json:"timezone"`
 	WiFi     struct {
 		SSID     string `json:"ssid"`
@@ -125,16 +124,6 @@ func chownSSH(authKeysFile string) {
 	}
 }
 
-func setHostname(hostnamectlBin, hostname string) error {
-	if hostname == "" {
-		return nil
-	}
-	cmd := exec.Command(hostnamectlBin, "set-hostname", hostname)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
-}
-
 func setTimezone(timedatectlBin, timezone string) error {
 	if timezone == "" {
 		return nil
@@ -169,7 +158,6 @@ func configureMQTT(passFile, envFile, password string) error {
 
 func main() {
 	configPath := flag.String("config", "/boot/firmware/config.json", "path to config.json")
-	hostnamectlBin := flag.String("hostnamectl", "hostnamectl", "path to hostnamectl binary")
 	timedatectlBin := flag.String("timedatectl", "timedatectl", "path to timedatectl binary")
 	flag.Parse()
 
@@ -193,12 +181,6 @@ func main() {
 			log.Printf("Warning: SSH key configuration failed: %v", err)
 		} else if len(cfg.SSHAuthorizedKeys) > 0 {
 			log.Printf("Configured SSH authorized keys")
-		}
-
-		if err := setHostname(*hostnamectlBin, cfg.Hostname); err != nil {
-			log.Printf("Warning: hostname configuration failed: %v", err)
-		} else if cfg.Hostname != "" {
-			log.Printf("Set hostname to: %s", cfg.Hostname)
 		}
 
 		if err := setTimezone(*timedatectlBin, cfg.Timezone); err != nil {

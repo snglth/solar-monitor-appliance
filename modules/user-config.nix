@@ -2,7 +2,6 @@
 
 let
   defaultConfigAttrs = {
-    hostname = "solar-monitor";
     timezone = "UTC";
     wifi = {
       ssid = "";
@@ -48,7 +47,7 @@ in
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStart = "${applyUserConfig}/bin/apply-user-config --hostnamectl=${pkgs.systemd}/bin/hostnamectl --timedatectl=${pkgs.systemd}/bin/timedatectl";
+      ExecStart = "${applyUserConfig}/bin/apply-user-config --timedatectl=${pkgs.systemd}/bin/timedatectl";
     };
 
     # Never block boot, even on failure

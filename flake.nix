@@ -186,11 +186,12 @@
             # frontend assets incl. 155 MiB of JS source maps, plus
             # grafana-cli/grafana-server we don't need). Copy only
             # what the service actually uses — no source rebuild.
-            package = pkgs.runCommand "grafana-slim" { nativeBuildInputs = [ pkgs.rsync ]; } ''
+            package = pkgs.runCommand "grafana-slim" {} ''
               mkdir -p $out/bin $out/share/grafana
               install -m 0755 ${pkgs.grafana}/bin/grafana $out/bin/
               cp -a ${pkgs.grafana}/share/grafana/conf $out/share/grafana/
-              rsync -a --exclude='*.js.map' ${pkgs.grafana}/share/grafana/public/ $out/share/grafana/public/
+              cp -r --no-preserve=mode ${pkgs.grafana}/share/grafana/public $out/share/grafana/public
+              find $out/share/grafana/public -name '*.js.map' -delete
             '';
 
             # Disable plugin installer/updater; appropriate for an appliance
@@ -216,6 +217,10 @@
               ];
             };
           };
+
+          systemd.tmpfiles.rules = [
+            "d /var/lib/grafana 0750 grafana grafana -"
+          ];
 
           # Generate Grafana secret key on first boot
           systemd.services.grafana-secret-key = {
@@ -255,16 +260,13 @@
 
           environment.defaultPackages = lib.mkForce [];
 
-          # mkForce overrides the ~20 installer packages from profiles/base.nix
-          environment.systemPackages = lib.mkForce (
-            config.environment.corePackages ++ (with pkgs; [
-              htop
-              curl
-              mosquitto   # CLI tools: mosquitto_pub, mosquitto_sub
-            ])
-          );
+          environment.systemPackages = with pkgs; [
+            htop
+            curl
+            mosquitto   # CLI tools: mosquitto_pub, mosquitto_sub
+          ];
 
-          system.stateVersion = "24.11";
+          system.stateVersion = "25.11";
         })
       ];
     };
