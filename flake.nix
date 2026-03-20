@@ -18,7 +18,13 @@
         ({ config, pkgs, lib, ... }: {
 
           # ── SD image ───────────────────────────────────────────────
-          sdImage.compressImage = true;  # zstd-compressed; ~700-900 MiB distributed size
+          # Disable the built-in compression pipeline to avoid a wasteful
+          # compress (rootfs) → decompress → compress (final image) cycle.
+          # Instead, compress only the final assembled image via postBuildCommands.
+          sdImage.compressImage = false;
+          sdImage.postBuildCommands = ''
+            ${pkgs.zstd}/bin/zstd -T$NIX_BUILD_CORES --rm $img
+          '';
 
           # ── Boot / hardware ────────────────────────────────────────
           # nixos-hardware module handles device-tree, firmware, kernel.
