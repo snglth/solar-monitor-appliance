@@ -6,6 +6,8 @@ NixOS SD card image for a Raspberry Pi 4B running a solar IoT monitoring stack.
 IoT sensors → MQTT (Mosquitto :1883) → Vector → VictoriaMetrics (:8428) → Grafana (:3000)
 ```
 
+![Grafana dashboard](images/demo.png)
+
 ## Preparing the SD card
 
 Download the latest `solar-monitor-*.img.zst` from
@@ -154,4 +156,26 @@ A dev shell with `mosquitto` CLI tools and `paho-mqtt` (Python) is provided:
 
 ```sh
 nix develop
+```
+
+### Test data
+
+Scripts are provided for simulating sensor data and populating VictoriaMetrics:
+
+- `scripts/test-publish.py` --- publishes simulated solar data over MQTT in real time (one simulated day completes in ~10 minutes)
+- `scripts/generate-test-data.py` --- generates 7 days of simulated solar data in InfluxDB line protocol to stdout
+- `scripts/load-test-data.sh` --- generates and loads test data into VictoriaMetrics (default endpoint `http://10.44.0.1:8428`)
+- `scripts/clear-test-data.sh` --- deletes all time series from VictoriaMetrics
+
+```sh
+nix develop
+
+# Load 7 days of simulated data into the appliance
+./scripts/load-test-data.sh
+
+# Or target a custom endpoint
+./scripts/load-test-data.sh http://localhost:8428
+
+# Clear all data
+./scripts/clear-test-data.sh
 ```
