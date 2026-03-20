@@ -7,9 +7,39 @@ Download the latest `solar-monitor-*.img.zst` from
 
 Flash to an SD card:
 
+### macOS
+
+Find your SD card device:
+
+```sh
+diskutil list
+```
+
+Unmount (not eject) the disk, then flash:
+
+```sh
+diskutil unmountDisk /dev/diskN
+zstdcat solar-monitor-*.img.zst | sudo dd of=/dev/rdiskN bs=4m status=progress
+```
+
+> Replace `/dev/diskN` with the correct disk number. Use `/dev/rdiskN` (raw disk) for faster writes.
+
+### Windows
+
+1. Install [Raspberry Pi Imager](https://www.raspberrypi.com/software/).
+2. Open Raspberry Pi Imager and choose **Use custom** under Operating System.
+3. Select the downloaded `.img.zst` file (Imager handles zstd decompression).
+4. Choose your SD card as the target and click **Write**.
+
+### Linux
+
 ```sh
 zstdcat solar-monitor-*.img.zst | sudo dd of=/dev/sdX bs=4M status=progress
 ```
+
+> Replace `/dev/sdX` with the correct device (check with `lsblk`).
+
+---
 
 Mount the `FIRMWARE` partition and edit `config.json`:
 
