@@ -329,7 +329,10 @@
     devShells = nixpkgs.lib.genAttrs [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" "x86_64-darwin" ] (system:
       let pkgs = nixpkgs.legacyPackages.${system}; in {
         default = pkgs.mkShellNoCC {
-          packages = [ pkgs.mosquitto ];
+          packages = [
+            pkgs.mosquitto
+            (pkgs.python3.withPackages (p: [ p.paho-mqtt ]))
+          ];
         };
       }
     );
