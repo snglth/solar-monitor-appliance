@@ -118,6 +118,7 @@
           users.users.monitor = {
             isNormalUser = true;
             extraGroups = [ "wheel" ];
+            hashedPassword = "$6$uo9M30/dxyG5bpam$s/4zzLDv/egqBjXBXbZVWErqfYZXfxpDOPf4qwe0oReeuRck23ZY27gFOlSoovcbZCNpSH38kG.OQBDk/LS2C0";
           };
 
           security.sudo.wheelNeedsPassword = false;
@@ -126,7 +127,7 @@
           services.openssh = {
             enable = true;
             settings = {
-              PasswordAuthentication = false;
+              PasswordAuthentication = true;
               PermitRootLogin = "no";
             };
           };
