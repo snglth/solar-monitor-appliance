@@ -26,6 +26,10 @@
             ${pkgs.zstd}/bin/zstd -T$NIX_BUILD_CORES --rm $img
           '';
 
+          # The sd-image module sets noauto on the firmware partition,
+          # but apply-user-config needs it mounted to read config.json.
+          fileSystems."/boot/firmware".options = lib.mkForce [ "nofail" ];
+
           # ── Boot / hardware ────────────────────────────────────────
           # nixos-hardware module handles device-tree, firmware, kernel.
           # Allow unfree for Raspberry Pi firmware blobs.
@@ -172,7 +176,7 @@
                 type = "mqtt";
                 host = "127.0.0.1";
                 port = 1883;
-                username = "monitor";
+                user = "monitor";
                 password = "\${MQTT_PASSWORD}";
                 topic = "#";
               };
