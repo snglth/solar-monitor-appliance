@@ -319,5 +319,13 @@
 
     packages.aarch64-linux.default =
       self.nixosConfigurations.solar-monitor.config.system.build.sdImage;
+
+    devShells = nixpkgs.lib.genAttrs [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" "x86_64-darwin" ] (system:
+      let pkgs = nixpkgs.legacyPackages.${system}; in {
+        default = pkgs.mkShellNoCC {
+          packages = [ pkgs.mosquitto ];
+        };
+      }
+    );
   };
 }
