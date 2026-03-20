@@ -111,6 +111,7 @@
               1883  # Mosquitto MQTT
               3000  # Grafana
             ];
+            trustedInterfaces = [ "end0" ];
           };
 
           # ── Users ──────────────────────────────────────────────────
