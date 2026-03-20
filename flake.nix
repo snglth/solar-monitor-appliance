@@ -36,6 +36,9 @@
           # needs ext4 + vfat — strip the rest to shed ~230 MiB (samba,
           # python3, etc.).
           boot.supportedFilesystems = lib.mkForce { ext4 = true; vfat = true; };
+          services.lvm.enable = false;
+          boot.initrd.systemd.enable = true;
+          boot.swraid.enable = lib.mkForce false;
 
           # sd-image-aarch64.nix sets generic aarch64 initrd modules (incl.
           # dw-hdmi, which was removed/renamed in kernel 6.6+). The RPi
@@ -54,6 +57,20 @@
           hardware.enableAllHardware = lib.mkForce false;
           hardware.enableRedistributableFirmware = lib.mkForce false;
           hardware.firmware = [ pkgs.raspberrypiWirelessFirmware ];
+
+          # The nixos-hardware RPi4 module sets a DTB filter that fails
+          # in sandboxed builds (fchmodat2/EPERM). Disable filtering —
+          # the extra DTBs are negligible on the firmware partition.
+          hardware.deviceTree.filter = lib.mkForce null;
+
+          # The RPi vendor kernel doesn't ship all modules that NixOS
+          # references. Allow missing modules instead of failing.
+          nixpkgs.overlays = [
+            (final: prev: {
+              makeModulesClosure = args:
+                prev.makeModulesClosure (args // { allowMissing = true; });
+            })
+          ];
 
           fonts.enableDefaultPackages = false;
 
