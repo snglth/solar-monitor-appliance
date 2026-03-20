@@ -1,7 +1,7 @@
 { config, pkgs, lib, ... }:
 
 let
-  defaultConfig = builtins.toJSON {
+  defaultConfigAttrs = {
     hostname = "solar-monitor";
     timezone = "UTC";
     wifi = {
@@ -13,6 +13,7 @@ let
       password = "";
     };
   };
+  defaultConfig = builtins.toJSON defaultConfigAttrs;
 
   applyUserConfig = pkgs.buildGoModule {
     pname = "apply-user-config";
@@ -24,7 +25,7 @@ in
 {
   # ── Seed config.json onto the firmware partition at build time ──
   sdImage.populateFirmwareCommands = lib.mkAfter ''
-    cp ${pkgs.writeText "config.json" defaultConfig} firmware/config.json
+    ${pkgs.jq}/bin/jq . ${pkgs.writeText "config.json" defaultConfig} > firmware/config.json
   '';
 
   # ── Systemd oneshot to apply config at early boot ──────────────
