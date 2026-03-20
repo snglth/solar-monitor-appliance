@@ -143,9 +143,9 @@
               {
                 port = 1883;
                 settings.allow_anonymous = false;
-                acl = [ "topic readwrite #" ];
                 users.monitor = {
                   passwordFile = "/var/lib/mosquitto/monitor-password";
+                  acl = [ "readwrite #" ];
                 };
               }
             ];
