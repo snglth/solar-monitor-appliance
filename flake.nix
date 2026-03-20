@@ -45,6 +45,7 @@
           # kernel doesn't ship all of those. Override with only what the
           # Pi 4 actually needs for early boot.
           boot.initrd.availableKernelModules = lib.mkForce [
+            "mmc_block"       # SD card block device layer
             "usbhid"
             "usb_storage"
             "uas"
