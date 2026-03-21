@@ -11,7 +11,7 @@
       "title": "PV Power",
       "gridPos": { "x": 0, "y": 0, "w": 5, "h": 4 },
       "datasource": { "type": "prometheus", "uid": "victoriametrics" },
-      "targets": [{ "expr": "solar_pv_power", "refId": "A" }],
+      "targets": [{ "expr": "solar_pv_power or on() (solar_pv_voltage * ignoring(mqtt_topic) solar_pv_current)", "refId": "A" }],
       "fieldConfig": {
         "defaults": {
           "unit": "watt",
@@ -32,7 +32,7 @@
       "title": "Load Power",
       "gridPos": { "x": 5, "y": 0, "w": 5, "h": 4 },
       "datasource": { "type": "prometheus", "uid": "victoriametrics" },
-      "targets": [{ "expr": "solar_load_power", "refId": "A" }],
+      "targets": [{ "expr": "solar_load_power or on() (solar_load_voltage * ignoring(mqtt_topic) solar_load_current)", "refId": "A" }],
       "fieldConfig": {
         "defaults": {
           "unit": "watt",
@@ -153,7 +153,7 @@
       "title": "PV Power",
       "gridPos": { "x": 16, "y": 5, "w": 8, "h": 7 },
       "datasource": { "type": "prometheus", "uid": "victoriametrics" },
-      "targets": [{ "expr": "solar_pv_power", "legendFormat": "Ppv", "refId": "A" }],
+      "targets": [{ "expr": "solar_pv_power or on() (solar_pv_voltage * ignoring(mqtt_topic) solar_pv_current)", "legendFormat": "Ppv", "refId": "A" }],
       "fieldConfig": {
         "defaults": {
           "unit": "watt",
@@ -202,7 +202,7 @@
       "title": "Load Power",
       "gridPos": { "x": 16, "y": 13, "w": 8, "h": 7 },
       "datasource": { "type": "prometheus", "uid": "victoriametrics" },
-      "targets": [{ "expr": "solar_load_power", "legendFormat": "Pload", "refId": "A" }],
+      "targets": [{ "expr": "solar_load_power or on() (solar_load_voltage * ignoring(mqtt_topic) solar_load_current)", "legendFormat": "Pload", "refId": "A" }],
       "fieldConfig": {
         "defaults": {
           "unit": "watt",
@@ -274,9 +274,9 @@
       "gridPos": { "x": 16, "y": 21, "w": 8, "h": 7 },
       "datasource": { "type": "prometheus", "uid": "victoriametrics" },
       "targets": [
-        { "expr": "solar_pv_power", "legendFormat": "PV", "refId": "A" },
-        { "expr": "solar_load_power", "legendFormat": "Load", "refId": "B" },
-        { "expr": "solar_pv_power - ignoring(mqtt_topic) solar_load_power", "legendFormat": "Balance", "refId": "C" }
+        { "expr": "solar_pv_power or on() (solar_pv_voltage * ignoring(mqtt_topic) solar_pv_current)", "legendFormat": "PV", "refId": "A" },
+        { "expr": "solar_load_power or on() (solar_load_voltage * ignoring(mqtt_topic) solar_load_current)", "legendFormat": "Load", "refId": "B" },
+        { "expr": "(solar_pv_power or on() (solar_pv_voltage * ignoring(mqtt_topic) solar_pv_current)) - ignoring(mqtt_topic) (solar_load_power or on() (solar_load_voltage * ignoring(mqtt_topic) solar_load_current))", "legendFormat": "Balance", "refId": "C" }
       ],
       "fieldConfig": {
         "defaults": {

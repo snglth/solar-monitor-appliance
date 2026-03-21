@@ -122,10 +122,10 @@ Vector transforms topics into InfluxDB line protocol: `solar/pv/voltage` becomes
 |-------|------|--------|
 | `solar/pv/voltage` | V | PV INA219 |
 | `solar/pv/current` | A | PV INA219 |
-| `solar/pv/power` | W | computed on MCU |
+| `solar/pv/power` | W | computed on MCU (server fallback: V × I) |
 | `solar/load/voltage` | V | Load INA219 |
 | `solar/load/current` | A | Load INA219 |
-| `solar/load/power` | W | computed on MCU |
+| `solar/load/power` | W | computed on MCU (server fallback: V × I) |
 | `solar/battery/voltage` | V | Battery INA219 |
 
 #### Optional
