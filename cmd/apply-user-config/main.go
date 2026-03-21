@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net"
 	"os"
 	"os/exec"
 	"os/user"
@@ -15,9 +16,10 @@ import (
 
 type Config struct {
 	Timezone string `json:"timezone"`
-	WiFi     struct {
-		SSID     string `json:"ssid"`
-		Password string `json:"password"`
+	WiFi struct {
+		SSID       string `json:"ssid"`
+		Password   string `json:"password"`
+		MACAddress string `json:"mac_address"`
 	} `json:"wifi"`
 	SSHAuthorizedKeys []string `json:"ssh_authorized_keys"`
 	MQTT              struct {
@@ -134,6 +136,28 @@ func setTimezone(timedatectlBin, timezone string) error {
 	return cmd.Run()
 }
 
+func configureMAC(ipBin, iface, macAddr string) error {
+	if macAddr == "" {
+		return nil
+	}
+	if _, err := net.ParseMAC(macAddr); err != nil {
+		return fmt.Errorf("invalid MAC address %q: %w", macAddr, err)
+	}
+	for _, args := range [][]string{
+		{"link", "set", iface, "down"},
+		{"link", "set", iface, "address", macAddr},
+		{"link", "set", iface, "up"},
+	} {
+		cmd := exec.Command(ipBin, args...)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("ip %s: %w", strings.Join(args, " "), err)
+		}
+	}
+	return nil
+}
+
 func configureMQTT(passFile, envFile, password string) error {
 	if err := os.MkdirAll(filepath.Dir(passFile), 0755); err != nil {
 		return fmt.Errorf("creating password file dir: %w", err)
@@ -159,6 +183,7 @@ func configureMQTT(passFile, envFile, password string) error {
 func main() {
 	configPath := flag.String("config", "/boot/firmware/config.json", "path to config.json")
 	timedatectlBin := flag.String("timedatectl", "timedatectl", "path to timedatectl binary")
+	ipBin := flag.String("ip", "ip", "path to ip binary")
 	flag.Parse()
 
 	mqttPass := "monitor"
@@ -175,6 +200,12 @@ func main() {
 			log.Printf("Warning: WiFi configuration failed: %v", err)
 		} else if cfg.WiFi.SSID != "" {
 			log.Printf("Configured WiFi for SSID: %s", cfg.WiFi.SSID)
+		}
+
+		if err := configureMAC(*ipBin, "wlan0", cfg.WiFi.MACAddress); err != nil {
+			log.Printf("Warning: MAC address configuration failed: %v", err)
+		} else if cfg.WiFi.MACAddress != "" {
+			log.Printf("Set wlan0 MAC address to: %s", cfg.WiFi.MACAddress)
 		}
 
 		if err := configureSSHKeys("/home/monitor/.ssh/authorized_keys", cfg.SSHAuthorizedKeys); err != nil {

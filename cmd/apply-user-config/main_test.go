@@ -380,6 +380,75 @@ func TestSetTimezone_Empty(t *testing.T) {
 	}
 }
 
+// ── configureMAC tests ──────────────────────────────────────────────
+
+func TestConfigureMAC(t *testing.T) {
+	if runtime.GOOS != "linux" && runtime.GOOS != "darwin" {
+		t.Skip("skipping on unsupported OS")
+	}
+
+	dir := t.TempDir()
+	logFile := filepath.Join(dir, "calls")
+
+	mockBin := filepath.Join(dir, "mock-ip")
+	script := "#!/bin/sh\necho \"$@\" >> " + logFile + "\n"
+	os.WriteFile(mockBin, []byte(script), 0755)
+
+	err := configureMAC(mockBin, "wlan0", "02:42:ac:11:00:02")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	data, _ := os.ReadFile(logFile)
+	lines := strings.Split(strings.TrimSpace(string(data)), "\n")
+	if len(lines) != 3 {
+		t.Fatalf("expected 3 ip invocations, got %d: %v", len(lines), lines)
+	}
+	if lines[0] != "link set wlan0 down" {
+		t.Errorf("call 1 = %q, want %q", lines[0], "link set wlan0 down")
+	}
+	if lines[1] != "link set wlan0 address 02:42:ac:11:00:02" {
+		t.Errorf("call 2 = %q, want %q", lines[1], "link set wlan0 address 02:42:ac:11:00:02")
+	}
+	if lines[2] != "link set wlan0 up" {
+		t.Errorf("call 3 = %q, want %q", lines[2], "link set wlan0 up")
+	}
+}
+
+func TestConfigureMAC_Empty(t *testing.T) {
+	err := configureMAC("/nonexistent/ip", "wlan0", "")
+	if err != nil {
+		t.Errorf("expected nil for empty MAC, got %v", err)
+	}
+}
+
+func TestConfigureMAC_InvalidMAC(t *testing.T) {
+	err := configureMAC("/nonexistent/ip", "wlan0", "not-a-mac")
+	if err == nil {
+		t.Fatal("expected error for invalid MAC address")
+	}
+	if !strings.Contains(err.Error(), "invalid MAC address") {
+		t.Errorf("error = %q, want it to contain %q", err.Error(), "invalid MAC address")
+	}
+}
+
+func TestLoadConfig_WithMACAddress(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "config.json")
+	data := `{
+		"wifi": {"ssid": "Net", "password": "pw", "mac_address": "02:42:ac:11:00:02"}
+	}`
+	os.WriteFile(path, []byte(data), 0644)
+
+	cfg, err := loadConfig(path)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cfg.WiFi.MACAddress != "02:42:ac:11:00:02" {
+		t.Errorf("mac_address = %q, want %q", cfg.WiFi.MACAddress, "02:42:ac:11:00:02")
+	}
+}
+
 // ── Integration-style: verify JSON round-trip ───────────────────────
 
 func TestConfigRoundTrip(t *testing.T) {

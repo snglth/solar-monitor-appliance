@@ -6,6 +6,7 @@ let
     wifi = {
       ssid = "";
       password = "";
+      mac_address = "";
     };
     ssh_authorized_keys = [];
     mqtt = {
@@ -49,7 +50,7 @@ in
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStart = "${applyUserConfig}/bin/apply-user-config --timedatectl=${pkgs.systemd}/bin/timedatectl";
+      ExecStart = "${applyUserConfig}/bin/apply-user-config --timedatectl=${pkgs.systemd}/bin/timedatectl --ip=${pkgs.iproute2}/bin/ip";
     };
 
     # Never block boot, even on failure

@@ -120,6 +120,7 @@
               1883  # Mosquitto MQTT
               3000  # Grafana
             ];
+            allowedUDPPorts = [ 5353 ];  # mDNS
             trustedInterfaces = [ "end0" ];
           };
 
@@ -138,6 +139,16 @@
             settings = {
               PasswordAuthentication = true;
               PermitRootLogin = "no";
+            };
+          };
+
+          # ── mDNS (Avahi) ─────────────────────────────────────────────
+          services.avahi = {
+            enable = true;
+            nssmdns4 = true;
+            publish = {
+              enable = true;
+              addresses = true;
             };
           };
 
@@ -291,6 +302,17 @@
           };
 
           # ── System basics ──────────────────────────────────────────
+          services.getty.helpLine = ''
+
+            Wired:    10.44.0.1 (end0)
+            Wireless: \4{wlan0}
+            Hostname: solar-monitor.local
+
+            Grafana:  http://solar-monitor.local:3000  (admin / admin)
+            SSH:      ssh monitor@solar-monitor.local
+            MQTT:     solar-monitor.local:1883  user: monitor
+          '';
+
           time.timeZone = "Europe/Kyiv";
           i18n.defaultLocale = "en_US.UTF-8";
           i18n.supportedLocales = [ "en_US.UTF-8/UTF-8" ];

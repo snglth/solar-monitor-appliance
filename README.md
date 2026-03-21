@@ -46,7 +46,8 @@ Mount the `FIRMWARE` partition after flashing and edit `config.json`:
   "timezone": "Europe/Kyiv",
   "wifi": {
     "ssid": "YOUR_SSID",
-    "password": "YOUR_WIFI_PASSWORD"
+    "password": "YOUR_WIFI_PASSWORD",
+    "mac_address": "02:42:ac:11:00:02"
   },
   "ssh_authorized_keys": [
     "ssh-ed25519 AAAA..."
@@ -58,6 +59,8 @@ Mount the `FIRMWARE` partition after flashing and edit `config.json`:
 ```
 
 All fields are optional. Defaults: timezone `UTC`, MQTT password `monitor`.
+
+Setting `mac_address` overrides the `wlan0` hardware address before WiFi connects. This lets you pre-assign a DHCP lease on your router so the Pi gets a known IP on the wireless network.
 
 A systemd oneshot (`apply-user-config`) reads this file on every boot and configures WiFi (iwd), SSH keys, timezone, and MQTT credentials before the dependent services start.
 
@@ -72,7 +75,11 @@ Unmount, insert into the Pi, and boot.
 
 Connect a computer directly via Ethernet to reach the Pi at `10.44.0.1`.
 
-Firewall allows TCP ports 1883 (MQTT) and 3000 (Grafana). The wired interface (`end0`) is fully trusted.
+### mDNS
+
+The appliance advertises itself as `solar-monitor.local` via Avahi (mDNS). On networks that support mDNS you can reach all services by hostname instead of IP address.
+
+Firewall allows TCP ports 1883 (MQTT) and 3000 (Grafana), and UDP port 5353 (mDNS). The wired interface (`end0`) is fully trusted.
 
 ## Services
 
@@ -86,14 +93,14 @@ Firewall allows TCP ports 1883 (MQTT) and 3000 (Grafana). The wired interface (`
 ### SSH
 
 ```sh
-ssh monitor@10.44.0.1
+ssh monitor@solar-monitor.local
 ```
 
 Password authentication is enabled. Default password is set at build time. Add your SSH key via `config.json` for key-based access.
 
 ### Grafana
 
-Open `http://10.44.0.1:3000` in a browser. Default login is `admin` / `admin`. A VictoriaMetrics datasource and a solar monitoring dashboard are pre-provisioned.
+Open `http://solar-monitor.local:3000` in a browser. Default login is `admin` / `admin`. A VictoriaMetrics datasource and a solar monitoring dashboard are pre-provisioned.
 
 ## MQTT API
 
@@ -101,7 +108,7 @@ The MQTT password set in `config.json` must match what the MCU uses to connect.
 
 | Parameter | Value |
 |-----------|-------|
-| Host | `10.44.0.1` (wired) or Pi's WiFi IP |
+| Host | `solar-monitor.local` or `10.44.0.1` (wired) |
 | Port | `1883` |
 | Username | `monitor` |
 | Password | as set in `config.json` (default: `monitor`) |
@@ -137,7 +144,7 @@ Vector transforms topics into InfluxDB line protocol: `solar/pv/voltage` becomes
 ### Verify
 
 ```sh
-mosquitto_sub -h 10.44.0.1 -u monitor -P monitor -t 'solar/#' -v
+mosquitto_sub -h solar-monitor.local -u monitor -P monitor -t 'solar/#' -v
 ```
 
 ## Development
