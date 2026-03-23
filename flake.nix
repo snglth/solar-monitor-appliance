@@ -354,6 +354,7 @@
           packages = [
             pkgs.mosquitto
             (pkgs.python3.withPackages (p: [ p.paho-mqtt ]))
+            pkgs.platformio-core
           ];
         };
       }

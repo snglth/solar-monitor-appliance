@@ -159,11 +159,27 @@ nix build
 
 The resulting image is at `result/sd-image/solar-monitor-*.img.zst`. Tagged commits also produce release images via GitHub Actions.
 
-A dev shell with `mosquitto` CLI tools and `paho-mqtt` (Python) is provided:
+A dev shell with `mosquitto` CLI tools, `paho-mqtt` (Python), and PlatformIO is provided:
 
 ```sh
 nix develop
 ```
+
+### Demo firmware (ESP32)
+
+A PlatformIO project under `firmware/demo/` that runs on an ESP32 DevKit and publishes simulated solar data over MQTT. It reuses the same simulation model as `scripts/test-publish.py` (irradiance curve, battery state, load noise) and resolves the broker via mDNS — no hardcoded IP required.
+
+1. Edit `firmware/demo/include/config.h` with your WiFi credentials.
+2. Build and flash:
+
+```sh
+nix develop
+cd firmware/demo
+pio run -t upload
+pio device monitor
+```
+
+The firmware discovers `solar-monitor.local` via mDNS, connects to Mosquitto on port 1883, and publishes all 7 `solar/*` topics every 5 seconds. One simulated solar day completes in ~10 minutes. Serial output shows connection status and live readings.
 
 ### Test data
 
