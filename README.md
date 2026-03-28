@@ -2,8 +2,18 @@
 
 NixOS SD card image for a Raspberry Pi 4B running a solar IoT monitoring stack.
 
-```
-IoT sensors → MQTT (Mosquitto :1883) → Vector → VictoriaMetrics (:8428) → Grafana (:3000)
+```mermaid
+flowchart LR
+    sensors["IoT sensors"]
+    mqtt["Mosquitto\n:1883"]
+    bridge["mqtt-bridge"]
+    vm["VictoriaMetrics\n:8428"]
+    grafana["Grafana\n:3000"]
+
+    sensors -- MQTT --> mqtt
+    mqtt -- subscribe # --> bridge
+    bridge -- "InfluxDB line\nprotocol /write" --> vm
+    vm -- PromQL --> grafana
 ```
 
 ![Grafana dashboard](images/demo.png)
@@ -87,7 +97,7 @@ Firewall allows TCP ports 1883 (MQTT) and 3000 (Grafana), and UDP port 5353 (mDN
 |---------|------|-------|
 | **Mosquitto** | 1883 | MQTT broker, password auth required |
 | **VictoriaMetrics** | 8428 | Time-series DB, 12-month retention, internal only |
-| **Vector** | — | Bridges MQTT → VictoriaMetrics via InfluxDB line protocol |
+| **mqtt-bridge** | — | Bridges MQTT → VictoriaMetrics via InfluxDB line protocol |
 | **Grafana** | 3000 | Dashboards, auto-provisioned with VictoriaMetrics datasource |
 
 ### SSH
@@ -121,7 +131,7 @@ Publish each reading as a **plain numeric string** to a hierarchical topic:
 solar/<source>/<field>  →  <float value>
 ```
 
-Vector transforms topics into InfluxDB line protocol: `solar/pv/voltage` becomes measurement `solar_pv`, field `voltage`.
+The MQTT bridge transforms topics into InfluxDB line protocol: `solar/pv/voltage` becomes measurement `solar_pv`, field `voltage`.
 
 #### Required
 
