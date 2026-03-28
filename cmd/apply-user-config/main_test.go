@@ -299,7 +299,7 @@ func TestConfigureSSHKeys_EmptyKeys(t *testing.T) {
 func TestConfigureMQTT(t *testing.T) {
 	dir := t.TempDir()
 	passFile := filepath.Join(dir, "mosquitto", "monitor-password")
-	envFile := filepath.Join(dir, "vector", "mqtt.env")
+	envFile := filepath.Join(dir, "credentials", "mqtt.env")
 
 	err := configureMQTT(passFile, envFile, "secret")
 	if err != nil {

@@ -183,9 +183,9 @@
           };
 
           # ── MQTT bridge (MQTT → VictoriaMetrics) ────────────────────
-          # Replaces Vector (~123 MiB + 230 MiB GCC closure leak) with a
-          # ~3 MiB Go binary that does the same: subscribe to MQTT, reformat
-          # topics as InfluxDB line protocol, POST to VictoriaMetrics /write.
+          # Lightweight Go binary (~3 MiB) that subscribes to all MQTT
+          # topics, reformats as InfluxDB line protocol, and POSTs to
+          # VictoriaMetrics /write.
           systemd.services.mqtt-bridge = let
             mqttBridge = pkgs.buildGoModule {
               pname = "mqtt-bridge";
