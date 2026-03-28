@@ -43,7 +43,7 @@ in
       "iwd.service"
       "sshd.service"
       "mosquitto.service"
-      "vector.service"
+      "mqtt-bridge.service"
       "grafana.service"
     ];
 

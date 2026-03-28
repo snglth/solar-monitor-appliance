@@ -79,6 +79,34 @@
             (final: prev: {
               makeModulesClosure = args:
                 prev.makeModulesClosure (args // { allowMissing = true; });
+
+              # Slim systemd: disable features the appliance doesn't use.
+              systemd = prev.systemd.override {
+                withApparmor = false;
+                withBootloader = false;
+                withCoredump = false;
+                withCryptsetup = false;
+                withDocumentation = false;
+                withEfi = false;
+                withFido2 = false;
+                withFirstboot = false;
+                withHomed = false;
+                withImportd = false;
+                withKernelInstall = false;
+                withLibBPF = false;
+                withMachined = false;
+                withNspawn = false;
+                withPortabled = false;
+                withQrencode = false;
+                withRemote = false;
+                withRepart = false;
+                withShellCompletions = false;
+                withSysupdate = false;
+                withUkify = false;
+                withUserDb = false;
+                withVConsole = false;
+                withVmspawn = false;
+              };
             })
           ];
 
@@ -182,56 +210,28 @@
             '';
           };
 
-          # ── Vector (MQTT → VictoriaMetrics bridge) ──────────────────
-          services.vector = {
-            enable = true;
-            # Config uses env-var interpolation (${MQTT_PASSWORD}), which
-            # is not available during nix-build-time validation.
-            validateConfig = false;
-            settings = {
-              sources.mqtt = {
-                type = "mqtt";
-                host = "127.0.0.1";
-                port = 1883;
-                user = "monitor";
-                password = "\${MQTT_PASSWORD}";
-                topic = "#";
-              };
-
-              transforms.to_influx = {
-                type = "remap";
-                inputs = [ "mqtt" ];
-                source = ''
-                  topic_raw = string!(.topic)
-                  value = to_float!(strip_whitespace(string!(.message)))
-
-                  # solar/pv/voltage → measurement=solar_pv, field=voltage
-                  parts = split(topic_raw, "/")
-                  if length(parts) < 3 { abort }
-
-                  field = join!(slice!(parts, -1), "")
-                  measurement = join!(slice!(parts, 0, -1), "_")
-
-                  .message = measurement + ",mqtt_topic=" + topic_raw + " " + field + "=" + to_string(value)
-                '';
-              };
-
-              sinks.victoriametrics = {
-                type = "http";
-                inputs = [ "to_influx" ];
-                uri = "http://127.0.0.1:8428/write";
-                method = "post";
-                encoding.codec = "text";
-                healthcheck.enabled = false;
-              };
+          # ── MQTT bridge (MQTT → VictoriaMetrics) ────────────────────
+          # Replaces Vector (~123 MiB + 230 MiB GCC closure leak) with a
+          # ~3 MiB Go binary that does the same: subscribe to MQTT, reformat
+          # topics as InfluxDB line protocol, POST to VictoriaMetrics /write.
+          systemd.services.mqtt-bridge = let
+            mqttBridge = pkgs.buildGoModule {
+              pname = "mqtt-bridge";
+              version = "0.1.0";
+              src = self + "/cmd/mqtt-bridge";
+              vendorHash = "sha256-Db09ftEG9DJgN6mb4LaA2cOGiOjQx36DzeDqzAik2Fs=";
             };
-          };
-
-          # Vector must wait for Mosquitto and VictoriaMetrics
-          systemd.services.vector = {
+          in {
+            description = "MQTT to VictoriaMetrics bridge";
+            wantedBy = [ "multi-user.target" ];
             after = [ "mosquitto.service" "victoriametrics.service" ];
             wants = [ "mosquitto.service" "victoriametrics.service" ];
-            serviceConfig.EnvironmentFile = "/run/credentials/mqtt.env";
+            serviceConfig = {
+              ExecStart = "${mqttBridge}/bin/mqtt-bridge";
+              EnvironmentFile = "/run/credentials/mqtt.env";
+              Restart = "always";
+              RestartSec = 5;
+            };
           };
 
           # ── Grafana ────────────────────────────────────────────────
@@ -247,7 +247,24 @@
               install -m 0755 ${pkgs.grafana}/bin/grafana $out/bin/
               cp -a ${pkgs.grafana}/share/grafana/conf $out/share/grafana/
               cp -r --no-preserve=mode ${pkgs.grafana}/share/grafana/public $out/share/grafana/public
+
               find $out/share/grafana/public -name '*.js.map' -delete
+
+              # Strip unused built-in plugins (~30 MiB). Dashboard uses only
+              # stat + timeseries panels and the prometheus datasource.
+              cd $out/share/grafana/public/app/plugins
+              find panel -mindepth 1 -maxdepth 1 \
+                ! -name timeseries ! -name stat ! -name gauge ! -name table ! -name text \
+                -exec rm -rf {} +
+              find datasource -mindepth 1 -maxdepth 1 \
+                ! -name prometheus ! -name grafana ! -name dashboard ! -name mixed \
+                -exec rm -rf {} +
+
+              # Strip non-English locales (~10 MiB) and geo data
+              find $out/share/grafana/public/locales -mindepth 1 -maxdepth 1 \
+                ! -name en-US -exec rm -rf {} +
+              rm -rf $out/share/grafana/public/gazetteer
+              rm -rf $out/share/grafana/public/maps
             '';
 
             # Disable plugin installer/updater; appropriate for an appliance
@@ -317,9 +334,9 @@
           i18n.defaultLocale = "en_US.UTF-8";
           i18n.supportedLocales = [ "en_US.UTF-8/UTF-8" ];
 
-          nix.settings.experimental-features = [ "nix-command" "flakes" ];
-          nix.registry = lib.mkForce {};
-          nix.channel.enable = false;
+          # Appliance — no Nix commands needed at runtime.
+          # Saves ~50–150 MiB (nix binary, Boehm GC, SQLite, libcurl).
+          nix.enable = false;
 
           documentation.enable = false;
 
@@ -334,11 +351,15 @@
 
           environment.defaultPackages = lib.mkForce [];
 
-          environment.systemPackages = with pkgs; [
+          # mkForce overrides the installer profile (sd-image-aarch64.nix →
+          # installation-device.nix), which adds ~90 packages (vim, screen,
+          # testdisk, w3m, smartmontools, nvme-cli, efibootmgr, …) that an
+          # appliance does not need.
+          environment.systemPackages = lib.mkForce (with pkgs; [
             htop
             curl
             mosquitto   # CLI tools: mosquitto_pub, mosquitto_sub
-          ];
+          ]);
 
           system.stateVersion = "25.11";
         })
