@@ -81,19 +81,17 @@
                 prev.makeModulesClosure (args // { allowMissing = true; });
 
               # Slim systemd: disable features the appliance doesn't use.
+              # Only features that NixOS modules don't reference internally.
+              # Notably, withCoredump/withEfi/withBootloader/withVConsole/
+              # withCryptsetup/withFirstboot must stay — NixOS generates
+              # configs/units that expect them.
               systemd = prev.systemd.override {
                 withApparmor = false;
-                withBootloader = false;
-                withCoredump = false;
-                withCryptsetup = false;
                 withDocumentation = false;
-                withEfi = false;
                 withFido2 = false;
-                withFirstboot = false;
                 withHomed = false;
                 withImportd = false;
                 withKernelInstall = false;
-                withLibBPF = false;
                 withMachined = false;
                 withNspawn = false;
                 withPortabled = false;
@@ -103,8 +101,6 @@
                 withShellCompletions = false;
                 withSysupdate = false;
                 withUkify = false;
-                withUserDb = false;
-                withVConsole = false;
                 withVmspawn = false;
               };
             })
