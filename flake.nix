@@ -323,15 +323,11 @@
 
           environment.defaultPackages = lib.mkForce [];
 
-          # mkForce overrides the installer profile (sd-image-aarch64.nix →
-          # installation-device.nix), which adds ~90 packages (vim, screen,
-          # testdisk, w3m, smartmontools, nvme-cli, efibootmgr, …) that an
-          # appliance does not need.
-          environment.systemPackages = lib.mkForce (with pkgs; [
+          environment.systemPackages = with pkgs; [
             htop
             curl
             mosquitto   # CLI tools: mosquitto_pub, mosquitto_sub
-          ]);
+          ];
 
           system.stateVersion = "25.11";
         })
